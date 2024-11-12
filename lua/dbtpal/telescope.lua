@@ -1,19 +1,15 @@
 local pickers = require "telescope.pickers"
 local finders = require "telescope.finders"
 local conf = require("telescope.config").values
-local themes = require "telescope.themes"
+-- local themes = require "telescope.themes"
 
 local config = require "dbtpal.config"
-local commands = require "dbtpal.commands"
-local projects = require "dbtpal.projects"
-local log = require "dbtpal.log"
-local J = require "plenary.job"
-local display = require "dbtpal.display"
+local manifest = require "dbtpal.manifest"
 
 local M = {}
 
 M.dbt_models = function(tbl, opts)
-    opts = opts or themes.get_dropdown {}
+    opts = opts or {}
 
     pickers
         .new(opts, {
@@ -22,60 +18,56 @@ M.dbt_models = function(tbl, opts)
 
                 results = tbl,
                 entry_maker = function(entry)
-                    local res = vim.fn.json_decode(entry)
-
-                    if res == nil then return {} end
-
                     return {
-                        value = res.unique_id,
-                        display = res.name,
-                        ordinal = res.unique_id,
-                        path = config.options.path_to_dbt_project .. "/" .. res.original_file_path,
+                        value = entry,
+                        display = entry.unique_id,
+                        ordinal = entry.unique_id,
+                        path = config.options.path_to_dbt_project .. "/" .. entry.original_file_path,
                     }
                 end,
             },
 
             sorter = conf.file_sorter(),
+            previewer = conf.grep_previewer(opts),
         })
         :find()
 end
 
-M.dbt_picker = function(opts)
-    local cmd = "ls"
-    local args = { "--resource-type=model", "--output=json", "--quiet" }
-
-    if config.options.path_to_dbt_project == "" then
-        local bpath = vim.fn.expand "%:p:h"
-        if projects.detect_dbt_project_dir(bpath) == false then
-            log.error "Couldn't detect a dbt project from this buffer. Try setting the dbt project directory manually"
-            return
-        end
+local picker_manifest_prep = function(tbl, project_only)
+    local res = {}
+    for _, val in pairs(tbl) do
+        if project_only and val.package_name == manifest.current_project then table.insert(res, val) end
     end
+    return res
+end
 
-    local dbt_path, cmd_args = commands.build_path_args(cmd, args)
-    local response = {}
-    J
-        :new({
-            command = dbt_path,
-            args = cmd_args,
-            on_exit = function(j, code)
-                if code == 0 then
-                    response = j:result()
-                    log.trace(response)
-                    vim.schedule(function() M.dbt_models(response, opts) end)
-                else
-                    table.insert(response, "Failed to run dbt command. Exit Code: " .. code .. "\n")
-                    local a = table.concat(cmd_args, " ") or ""
-                    local err = string.format("dbt command failed: %s %s\n\n", dbt_path, a)
-                    table.insert(response, "------------\n")
-                    table.insert(response, err)
-                    vim.list_extend(response, j:stderr_result())
-                    vim.list_extend(response, j:result())
-                    vim.schedule(function() display.popup(response) end)
-                end
-            end,
-        })
-        :start()
+local map_has_value = function(map, val)
+    for _, value in ipairs(map) do
+        if value == val then return true end
+    end
+    return false
+end
+
+local filter_manifest_nodes = function(manifest_nodes, filter)
+    local res = {}
+    for key, val in pairs(manifest_nodes) do
+        if map_has_value(filter, key) then res[key] = val end
+    end
+    return res
+end
+
+M.dbt_picker = function(nodes, opts)
+    local res = picker_manifest_prep(nodes, true)
+    M.dbt_models(res, opts)
+end
+
+M.dbt_picker_all = function() M.dbt_picker(manifest.manifest["nodes"]) end
+M.dbt_picker_child = function()
+    M.dbt_picker(filter_manifest_nodes(manifest.manifest["nodes"], manifest.child_map(manifest.current_object())))
+end
+
+M.dbt_picker_parent = function()
+    M.dbt_picker(filter_manifest_nodes(manifest.manifest["nodes"], manifest.parent_map(manifest.current_object())))
 end
 
 return M
