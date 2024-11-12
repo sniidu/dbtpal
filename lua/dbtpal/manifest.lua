@@ -3,14 +3,14 @@ local projects = require "dbtpal.projects"
 
 local M = {}
 
-local manifest_path = projects._find_project_dir() .. "/target/manifest.json"
+local project_dir = projects._find_project_dir()
+local manifest_path = project_dir .. "/target/manifest.json"
 
 -- Works only when dbt_project.yml in its default position
 local get_manifest = function()
-    local project = projects._find_project_dir()
     local content
-    if project then
-        local file = assert(io.open(project .. "/target/manifest.json", "r"))
+    if project_dir then
+        local file = assert(io.open(manifest_path, "r"))
         io.flush()
         content = vim.json.decode(file:read "*a")
     else

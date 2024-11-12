@@ -4,6 +4,7 @@ local commands = require "dbtpal.commands"
 local log = require "dbtpal.log"
 local J = require "plenary.job"
 local display = require "dbtpal.display"
+local manifest = require "dbtpal.manifest"
 
 local M = {}
 
@@ -91,5 +92,33 @@ M._create_job = function(cmd, args)
     job:start()
     return job
 end
+
+M.show_compiled = function()
+    -- Just return if no file path
+    if manifest.current()["original_file_path"] == nil then return end
+
+    local project_path = projects._find_project_dir()
+    local path = project_path
+        .. "/target/compiled/"
+        .. manifest.current_project
+        .. "/"
+        .. manifest.current()["original_file_path"]
+    display.floating_file(path)
+end
+
+M.show_run = function()
+    -- Just return if no file path
+    if manifest.current()["original_file_path"] == nil then return end
+
+    local project_path = projects._find_project_dir()
+    local path = project_path
+        .. "/target/run/"
+        .. manifest.current_project
+        .. "/"
+        .. manifest.current()["original_file_path"]
+    display.floating_file(path)
+end
+
+M.show_info = function() display.floating(manifest._parse_current()) end
 
 return M

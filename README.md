@@ -4,11 +4,10 @@
 
 A Neovim plugin for dbt model editing. The little helper I wish I always had.
 
-## Maintenance Note!
+## Maintenance Note
 
-I don't use dbt day-to-day so I don't spend much time on this package. 
-However, I do still accept issues and PRs, so please continue to send them in. 
-
+I don't use dbt day-to-day so I don't spend much time on this package.
+However, I do still accept issues and PRs, so please continue to send them in.
 
 # ✨Features
 
@@ -93,7 +92,12 @@ use {
         { "<leader>drf", "<cmd>DbtRun<cr>" },
         { "<leader>drp", "<cmd>DbtRunAll<cr>" },
         { "<leader>dtf", "<cmd>DbtTest<cr>" },
-        { "<leader>dm", "<cmd>lua require('dbtpal.telescope').dbt_picker()<cr>" },
+        { "<leader>dfa", "<cmd>lua require'dbtpal'.find_all()<cr>" },
+        { "<leader>dfc", "<cmd>lua require'dbtpal'.find_child()<cr>" },
+        { "<leader>dsc", "<cmd>lua require'dbtpal'.show_compiled()<cr>" },
+        { "<leader>dfp", "<cmd>lua require'dbtpal'.find_parent()<cr>" },
+        { "<leader>dsr", "<cmd>lua require'dbtpal'.show_run()<cr>" },
+        { "<leader>dsi", "<cmd>lua require'dbtpal'.show_info()<cr>" },
     },
     config = function()
         require("dbtpal").setup({
@@ -107,13 +111,13 @@ use {
     end,
 }
 ```
+
 </details>
 
 ## 🙈 Commands
 
 dbtpal has sensible defaults and can auto-detect project directories based
 on the currently open buffer when first run.
-
 
 Your typical dbt commands are supported in three modes: current model, all models,
 and user-specified models. See the sample setup above for some common mappings.
@@ -128,7 +132,6 @@ argument.
 In Lua: `require('dbtpal').run()`
 
 Run the current model
-
 
 #### DbtRunAll
 
@@ -176,7 +179,6 @@ In Lua: `require('dbtpal').build()`
 
 Build the current model
 
-
 ### Additional Lua Only Functions
 
 These commands are only available as Lua-only commands. You can map them to
@@ -206,7 +208,6 @@ The following options are available:
 | path_to_dbt_profiles_dir | Path to dbt profiles directory                           | `"~/.dbt"`                         |
 | extended_path_search     | Search for ref/source files in macros and models folders | `true`                             |
 | protect_compiled_files   | Prevent modifying sql files in target/(compiled\|run) folders | `true`                    |
-
 
 ### Misc
 

@@ -3,7 +3,7 @@ local config = require "dbtpal.config"
 
 local M = {}
 
-local _find_project_dir = function(fpath)
+M._find_project_dir = function(fpath)
     if fpath == nil then fpath = vim.fn.expand "%:p:h" end
     log.debug("Searching for dbt project dir in " .. fpath)
     local path = vim.fn.expand(vim.fn.fnamemodify(fpath, ":p"))
@@ -19,7 +19,7 @@ end
 
 M.detect_dbt_project_dir = function(bpath)
     log.debug "path_to_dbt is not set, attempting to autofind."
-    local found = _find_project_dir(bpath)
+    local found = M._find_project_dir(bpath)
     if found ~= nil then
         config.options.path_to_dbt_project = found
         return true
